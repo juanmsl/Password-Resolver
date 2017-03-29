@@ -11,9 +11,6 @@ public class Machine {
 		this.id = ++Machine.MACHINE_CONSECUTIVE;
 		this.port = port;
 		this.machineThread = new MachineConection(this.port);
-	}
-	
-	public void initializeMachine() {
 		this.machineThread.start();
 	}
 	
@@ -22,7 +19,7 @@ public class Machine {
 		return String.format("Machine %s: [Port: %s]", this.id, this.port);
 	}
 	
-	public void contar(int n) {
-		this.machineThread.contar(n);
+	public void sendInt(int n) {
+		this.machineThread.writeInt(n);
 	}
 }

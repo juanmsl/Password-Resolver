@@ -91,7 +91,7 @@ public class ClientGUI extends JFrame {
 		this.contentPane.add(this.lblPort, "cell 0 1,alignx trailing");
 		
 		this.portInput = new JSpinner();
-		this.portInput.setModel(new SpinnerNumberModel(new Integer(3200), null, null, new Integer(1)));
+		this.portInput.setModel(new SpinnerNumberModel(new Integer(3000), null, null, new Integer(1)));
 		this.contentPane.add(this.portInput, "cell 1 1,growx");
 		this.contentPane.add(this.btnIniciar, "cell 0 2 2 1,growx");
 		
