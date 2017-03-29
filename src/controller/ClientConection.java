@@ -19,7 +19,7 @@ public class ClientConection extends Thread {
 			this.port = port;
 			this.in = null;
 			this.out = null;
-			System.out.println("Enable conection on port " + port + "...");
+			System.out.println("Enable conection for client on port " + port + "...");
 			this.serverSocket = new ServerSocket(port);
 		}
 		catch (IOException event) {

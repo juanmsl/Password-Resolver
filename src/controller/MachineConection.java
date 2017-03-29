@@ -19,6 +19,7 @@ public class MachineConection extends Thread {
 			this.port = port;
 			System.out.println("Enable conection on port " + port + "...");
 			this.serverSocket = new ServerSocket(port);
+			System.out.println("Conection enabled on port " + port);
 		}
 		catch (IOException event) {
 			System.out.println("Error: [" + event.getMessage() + "]");
@@ -36,10 +37,11 @@ public class MachineConection extends Thread {
 		}
 		catch (IOException event) {
 			System.out.println("Error: [" + event.getMessage() + "]");
+			event.printStackTrace();
 		}
 	}
 	
-	public void contar(int n) {
+	public void writeInt(int n) {
 		try {
 			this.out.writeInt(n);
 		}
