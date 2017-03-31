@@ -7,13 +7,15 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class MachineConection extends Thread {
+	private Machine machine;
 	private ServerSocket serverSocket;
 	private DataInputStream in;
 	private DataOutputStream out;
 	private int port;
 	
-	public MachineConection(int port) {
+	public MachineConection(int port, Machine machine) {
 		try {
+			this.machine = machine;
 			this.in = null;
 			this.out = null;
 			this.port = port;
@@ -28,22 +30,42 @@ public class MachineConection extends Thread {
 	
 	@Override
 	public void run() {
+		Socket socket = null;
 		try {
 			System.out.println("Waiting for the machine that will use the port " + this.port + "...");
-			Socket socket = this.serverSocket.accept();
+			socket = this.serverSocket.accept();
 			System.out.println("...A machine was conected on port " + this.port);
 			this.in = new DataInputStream(socket.getInputStream());
 			this.out = new DataOutputStream(socket.getOutputStream());
+			while (true) {
+				String word = this.in.readUTF();
+				System.out.println("Machine " + this.machine.getId() + " - " + word);
+				if (word != null) {
+					this.machine.serverToClient(word);
+				}
+			}
 		}
 		catch (IOException event) {
-			System.out.println("Error: [" + event.getMessage() + "]");
-			event.printStackTrace();
+			if (socket != null) {
+				try {
+					socket.close();
+				}
+				catch (IOException event1) {
+					System.out.println("Error: [" + event1.getMessage() + "]");
+				}
+			}
+			System.out.println("The machine " + this.machine.getId() + " has been disconected");
+			this.machine.remove();
 		}
 	}
 	
-	public void writeInt(int n) {
+	public void resolve(String hashToFind, int characters, String dictionary, char first, char last) {
 		try {
-			this.out.writeInt(n);
+			this.out.writeUTF(hashToFind);
+			this.out.writeInt(characters);
+			this.out.writeUTF(dictionary);
+			this.out.writeChar(first);
+			this.out.writeChar(last);
 		}
 		catch (IOException event) {
 			System.out.println("Error: [" + event.getMessage() + "]");
