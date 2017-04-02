@@ -21,43 +21,46 @@ public class MachineConection extends Thread {
 			this.in = null;
 			this.out = null;
 			this.port = port;
-			System.out.println("Enable conection on port " + port + "...");
+			System.out.println("[Machine " + machine.getId() + "]: Enable conection on port " + port + "...");
 			this.serverSocket = new ServerSocket(port);
-			System.out.println("Conection enabled on port " + port);
+			System.out.println("[Machine " + machine.getId() + "]: Conection enabled on port " + port);
 		}
 		catch (IOException event) {
-			System.out.println("Error: [" + event.getMessage() + "]");
+			System.out.println("[Machine " + machine.getId() + "]: Error: [" + event.getMessage() + "]");
+			this.serverSocket = null;
 		}
 	}
 	
 	@Override
 	public void run() {
-		Socket socket = null;
-		try {
-			System.out.println("Waiting for the machine that will use the port " + this.port + "...");
-			socket = this.serverSocket.accept();
-			System.out.println("...A machine was conected on port " + this.port);
-			this.in = new DataInputStream(socket.getInputStream());
-			this.out = new DataOutputStream(socket.getOutputStream());
-			while (true) {
-				String word = this.in.readUTF();
-				System.out.println("Machine " + this.machine.getId() + " - " + word);
-				if (word != null) {
-					this.machine.serverToClient(word);
+		if (this.serverSocket != null) {
+			Socket socket = null;
+			try {
+				System.out.println("[Machine " + this.machine.getId() + "]: Waiting for the machine that will use the port " + this.port + "...");
+				socket = this.serverSocket.accept();
+				System.out.println("[Machine " + this.machine.getId() + "]: Conected on port " + this.port);
+				this.in = new DataInputStream(socket.getInputStream());
+				this.out = new DataOutputStream(socket.getOutputStream());
+				while (true) {
+					String word = this.in.readUTF();
+					System.out.println("[Machine " + this.machine.getId() + "]: " + word);
+					if (word != null) {
+						this.machine.serverToClient(word);
+					}
 				}
 			}
-		}
-		catch (IOException event) {
-			if (socket != null) {
-				try {
-					socket.close();
+			catch (IOException event) {
+				if (socket != null) {
+					try {
+						socket.close();
+					}
+					catch (IOException event1) {
+						System.out.println("[Machine " + this.machine.getId() + "]: Error: [" + event1.getMessage() + "]");
+					}
 				}
-				catch (IOException event1) {
-					System.out.println("Error: [" + event1.getMessage() + "]");
-				}
+				System.out.println("[Machine " + this.machine.getId() + "]: This machine has been disconected");
+				this.machine.remove();
 			}
-			System.out.println("The machine " + this.machine.getId() + " has been disconected");
-			this.machine.remove();
 		}
 	}
 	
@@ -70,7 +73,7 @@ public class MachineConection extends Thread {
 			this.out.writeChar(last);
 		}
 		catch (IOException event) {
-			System.out.println("Error: [" + event.getMessage() + "]");
+			System.out.println("[Machine " + this.machine.getId() + "]: Error: [" + event.getMessage() + "]");
 		}
 	}
 }

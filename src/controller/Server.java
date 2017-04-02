@@ -45,9 +45,14 @@ public class Server {
 	
 	public void resolve(DecriptMessage message) {
 		if (this.machines.size() == 0) {
-			this.requestToClient("No available servers on the moment");
+			this.requestInt(-1);
+			System.out.println("[Server]: No available servers on the moment");
+			this.requestUTF("No available servers on the moment");
 			return;
 		}
+		this.requestInt(0);
+		System.out.println("[Server]: Decoding the hash, please wait");
+		this.requestUTF("Decoding the hash, please wait");
 		int n = message.getDictionary().length() / this.machines.size();
 		int i = 0;
 		for (int port : this.machines.keySet()) {
@@ -64,12 +69,19 @@ public class Server {
 					m.resolve(message, first, last);
 				}
 			}).start();
-			
 		}
 	}
 	
-	public void requestToClient(String word) {
-		this.clientThread.request(word);
+	public void requestUTF(String word) {
+		this.clientThread.requestUTF(word);
+	}
+	
+	public void requestInt(int n) {
+		this.clientThread.requestInt(n);
+	}
+	
+	public void requestObject(Object object) {
+		this.clientThread.requestObject(object);
 	}
 	
 	public void removeMachine(int port) {

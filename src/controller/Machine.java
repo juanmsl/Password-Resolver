@@ -23,7 +23,7 @@ public class Machine {
 	}
 	
 	public void serverToClient(String word) {
-		this.server.requestToClient(word);
+		this.server.requestUTF(word);
 	}
 	
 	@Override

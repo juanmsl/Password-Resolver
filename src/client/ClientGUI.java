@@ -7,6 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
@@ -33,8 +34,8 @@ public class ClientGUI extends JFrame {
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
 	private Socket socket;
-	private ObjectOutputStream out;
-	private DataInputStream in;
+	private ObjectOutputStream objectOutput;
+	private ObjectInputStream objectInput;
 	private JButton btnConectar;
 	private JSpinner portInput;
 	private JTextField hostInput;
@@ -54,6 +55,7 @@ public class ClientGUI extends JFrame {
 	private JCheckBox chNumeros;
 	private JCheckBox chEspeciales;
 	private JButton btnDesconectar;
+	private DataInputStream dataInput;
 	
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
@@ -78,8 +80,8 @@ public class ClientGUI extends JFrame {
 			System.out.println("Error: [" + event1.getMessage() + "]");
 		}
 		this.socket = null;
-		this.out = null;
-		this.in = null;
+		this.objectOutput = null;
+		this.objectInput = null;
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setBounds(100, 100, 570, 311);
 		this.contentPane = new JPanel();
@@ -118,16 +120,7 @@ public class ClientGUI extends JFrame {
 		this.btnDesconectar.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if (ClientGUI.this.socket != null) {
-					try {
-						ClientGUI.this.socket.close();
-						ClientGUI.this.btnConectar.setEnabled(true);
-						ClientGUI.this.btnDesconectar.setEnabled(false);
-					}
-					catch (IOException event) {
-						System.out.println("Error: [" + event.getMessage() + "]");
-					}
-				}
+				ClientGUI.this.desconectar();
 			}
 		});
 		this.btnDesconectar.setEnabled(false);
@@ -135,9 +128,7 @@ public class ClientGUI extends JFrame {
 		this.btnConectar.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				String host = ClientGUI.this.hostInput.getText();
-				int port = Integer.parseInt(ClientGUI.this.portInput.getValue().toString());
-				ClientGUI.this.initClient(host, port);
+				ClientGUI.this.conectar();
 			}
 		});
 		
@@ -178,31 +169,7 @@ public class ClientGUI extends JFrame {
 		btnDescifrar.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if (ClientGUI.this.socket != null) {
-					try {
-						String hash = ClientGUI.this.hashInput.getText();
-						int characters = (int) ClientGUI.this.charsInput.getValue();
-						boolean minus = ClientGUI.this.chMinusculas.isSelected();
-						boolean mayus = ClientGUI.this.chMayusculas.isSelected();
-						boolean number = ClientGUI.this.chNumeros.isSelected();
-						boolean special = ClientGUI.this.chEspeciales.isSelected();
-						DecriptMessage message = new DecriptMessage(hash, characters, minus, mayus, number, special);
-						ClientGUI.this.out.writeObject(message);
-						ClientGUI.this.out.flush();
-						System.out.println("Enviado");
-						btnDescifrar.setEnabled(false);
-						ClientGUI.this.btnDesconectar.setEnabled(false);
-						String password = ClientGUI.this.in.readUTF();
-						btnDescifrar.setEnabled(true);
-						ClientGUI.this.btnDesconectar.setEnabled(true);
-						JOptionPane.showMessageDialog(ClientGUI.this, password);
-					}
-					catch (IOException event) {
-						System.out.println("Error: [" + event.getMessage() + "]");
-					}
-				} else {
-					JOptionPane.showMessageDialog(ClientGUI.this, "You must conect first to the server");
-				}
+				ClientGUI.this.descifrar(btnDescifrar);
 			}
 		});
 		
@@ -213,16 +180,82 @@ public class ClientGUI extends JFrame {
 		this.panel.add(this.chEspeciales, "cell 1 2,growx");
 	}
 	
-	private void initClient(String host, int port) {
+	private void conectar() {
+		String host = this.hostInput.getText();
+		int port = Integer.parseInt(this.portInput.getValue().toString());
 		try {
+			System.out.println("Conecting to the server on host " + host + " in the port " + port);
 			this.socket = new Socket(host, port);
-			this.out = new ObjectOutputStream(ClientGUI.this.socket.getOutputStream());
-			this.in = new DataInputStream(this.socket.getInputStream());
+			System.out.println("Getting the stream of input and output of the comunication");
+			this.objectOutput = new ObjectOutputStream(this.socket.getOutputStream());
+			this.objectInput = new ObjectInputStream(this.socket.getInputStream());
+			this.dataInput = new DataInputStream(this.socket.getInputStream());
 			this.btnDesconectar.setEnabled(true);
 			this.btnConectar.setEnabled(false);
+			System.out.println("Communication established");
+			JOptionPane.showMessageDialog(this, "Communication established");
 		}
 		catch (IOException event) {
+			System.out.println("No server founded in host " + host + " in the port " + port);
 			JOptionPane.showMessageDialog(ClientGUI.this, "No server founded in host " + host + " in the port " + port);
+		}
+	}
+	
+	private void desconectar() {
+		if (this.socket != null) {
+			try {
+				this.socket.close();
+				this.btnConectar.setEnabled(true);
+				this.btnDesconectar.setEnabled(false);
+				System.out.println("Communication finished");
+				JOptionPane.showMessageDialog(this, "Communication finished");
+			}
+			catch (IOException event) {
+				System.out.println("Error: [" + event.getMessage() + "]");
+			}
+		}
+	}
+	
+	private void descifrar(JButton btnDescifrar) {
+		if (this.socket != null) {
+			try {
+				String hash = this.hashInput.getText();
+				int characters = (int) this.charsInput.getValue();
+				boolean minus = this.chMinusculas.isSelected();
+				boolean mayus = this.chMayusculas.isSelected();
+				boolean number = this.chNumeros.isSelected();
+				boolean special = this.chEspeciales.isSelected();
+				DecriptMessage message = new DecriptMessage(hash, characters, minus, mayus, number, special);
+				System.out.println(message);
+				int option = JOptionPane.showConfirmDialog(this, message);
+				if (option == 0) {
+					btnDescifrar.setEnabled(false);
+					this.btnDesconectar.setEnabled(false);
+					this.objectOutput.writeObject(message);
+					System.out.println("Enviado");
+					int confirmation = this.dataInput.readInt();
+					String confirmationMessage = this.dataInput.readUTF();
+					System.out.println(confirmationMessage);
+					JOptionPane.showMessageDialog(this, confirmationMessage);
+					if (confirmation == 0) {
+						message = (DecriptMessage) this.objectInput.readObject();
+						System.out.println(message);
+						JOptionPane.showMessageDialog(this, message);
+					}
+					btnDescifrar.setEnabled(true);
+					this.btnDesconectar.setEnabled(true);
+				} else {
+					System.out.println("Cancelado");
+				}
+			}
+			catch (IOException event) {
+				System.out.println("Error: [" + event.getMessage() + "]");
+			}
+			catch (ClassNotFoundException event) {
+				System.out.println("Error: [" + event.getMessage() + "]");
+			}
+		} else {
+			JOptionPane.showMessageDialog(this, "You must conect first to the server");
 		}
 	}
 }

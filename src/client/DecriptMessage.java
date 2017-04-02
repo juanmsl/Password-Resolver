@@ -17,6 +17,7 @@ public class DecriptMessage implements Serializable {
 		this.hash = hash;
 		this.characters = characters;
 		this.dictionary = "";
+		this.password = "";
 		this.dictionary += ((minus) ? DecriptMessage.MINUSCULAS : "");
 		this.dictionary += ((mayus) ? DecriptMessage.MAYUSCULAS : "");
 		this.dictionary += ((number) ? DecriptMessage.NUMEROS : "");
@@ -42,5 +43,10 @@ public class DecriptMessage implements Serializable {
 	
 	public String getDictionary() {
 		return this.dictionary;
+	}
+	
+	@Override
+	public String toString() {
+		return String.format("Hash: %s\nPassword contains %s characters\nDictionary: %s\nPassword: %s", this.hash, this.characters, this.dictionary, this.password);
 	}
 }
