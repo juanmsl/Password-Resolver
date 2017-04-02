@@ -8,6 +8,7 @@ public class DecriptMessage implements Serializable {
 	public static final String MAYUSCULAS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	public static final String NUMEROS = "0123456789";
 	public static final String ESPECIALES = ",.;:-_!\"#$%&/()=?'\\¡¿ÑñáéíóúÁÉÍÓÚ´";
+	
 	private String hash;
 	private int characters;
 	private String dictionary;
