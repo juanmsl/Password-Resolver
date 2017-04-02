@@ -45,7 +45,7 @@ public class ClientConection extends Thread {
 				this.objectOutput = new ObjectOutputStream(socket.getOutputStream());
 				this.dataOutput = new DataOutputStream(socket.getOutputStream());
 				while (true) {
-					DecriptMessage message = (DecriptMessage) this.in.readObject();
+					Object message = this.in.readObject();
 					this.server.resolve(message);
 				}
 			}

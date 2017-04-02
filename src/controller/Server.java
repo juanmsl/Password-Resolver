@@ -4,6 +4,7 @@ import java.lang.reflect.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import client.DecriptMessage;
@@ -14,6 +15,7 @@ public class Server {
 	public static int MACHINES = 3;
 	
 	private Map<Integer, Machine> machines;
+	private List<Thread> thread;
 	private DiscoverThread discoverThread;
 	private ClientConection clientThread;
 	
@@ -58,15 +60,9 @@ public class Server {
 		System.out.println("[Server]: Decoding the hash, please wait");
 		this.requestUTF("Decoding the hash, please wait");
 		//holo
-
-
-		
-		
-		Class message= auxMessage.getClass();
-		System.out.println("holo: "+ message.getName());
-		Method method;
+			
 		try {
-			method = message.getMethod("getDictionary", null);
+			Method method = auxMessage.getClass().getMethod("getDictionary", null);
 			String dictionary = (String) method.invoke(auxMessage, null);
 			
 			
@@ -74,11 +70,12 @@ public class Server {
 			int i = 0;
 			for (int port : this.machines.keySet()) {
 				char first =dictionary.charAt(i);
-				i += n;
+				i += n + 1;
 				i = ((i >= dictionary.length()) ? dictionary.length() - 1 : i);
 				char last = dictionary.charAt(i);
 				System.out.println(first + " " + last);
 				Machine m = this.machines.get(port);
+				
 				new Thread(new Runnable() {
 					
 					@Override
@@ -104,6 +101,9 @@ public class Server {
 		}
 	}
 	
+	public void finishProcees(){
+		
+	}
 	public void requestUTF(String word) {
 		this.clientThread.requestUTF(word);
 	}
