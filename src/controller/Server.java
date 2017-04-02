@@ -3,6 +3,8 @@ package controller;
 import java.util.HashMap;
 import java.util.Map;
 
+import client.DecriptMessage;
+
 public class Server {
 	public static final int CLIENT_PORT = 3000;
 	public static final int PORT = 3001;
@@ -41,25 +43,25 @@ public class Server {
 		control.initializeServer();
 	}
 	
-	public void resolve(String hashToFind, int characters, String dictionary) {
+	public void resolve(DecriptMessage message) {
 		if (this.machines.size() == 0) {
 			this.requestToClient("No available servers on the moment");
 			return;
 		}
-		int n = dictionary.length() / this.machines.size();
+		int n = message.getDictionary().length() / this.machines.size();
 		int i = 0;
 		for (int port : this.machines.keySet()) {
-			char first = dictionary.charAt(i);
+			char first = message.getDictionary().charAt(i);
 			i += n;
-			i = ((i >= dictionary.length()) ? dictionary.length() - 1 : i);
-			char last = dictionary.charAt(i);
+			i = ((i >= message.getDictionary().length()) ? message.getDictionary().length() - 1 : i);
+			char last = message.getDictionary().charAt(i);
 			System.out.println(first + " " + last);
 			Machine m = this.machines.get(port);
 			new Thread(new Runnable() {
 				
 				@Override
 				public void run() {
-					m.resolve(hashToFind, characters, dictionary, first, last);
+					m.resolve(message, first, last);
 				}
 			}).start();
 			

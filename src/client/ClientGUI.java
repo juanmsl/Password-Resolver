@@ -6,8 +6,8 @@ import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 import javax.swing.Box;
@@ -30,15 +30,10 @@ import net.miginfocom.swing.MigLayout;
 
 public class ClientGUI extends JFrame {
 	
-	public static final String MINUSCULAS = "abcdefghijklmnopqrstuvwxyz";
-	public static final String MAYUSCULAS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-	public static final String NUMEROS = "0123456789";
-	public static final String ESPECIALES = ",.;:-_!\"#$%&/()=?'\\°ø—Ò·ÈÌÛ˙¡…Õ”⁄¥";
-	
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
 	private Socket socket;
-	private DataOutputStream out;
+	private ObjectOutputStream out;
 	private DataInputStream in;
 	private JButton btnConectar;
 	private JSpinner portInput;
@@ -187,16 +182,19 @@ public class ClientGUI extends JFrame {
 					try {
 						String hash = ClientGUI.this.hashInput.getText();
 						int characters = (int) ClientGUI.this.charsInput.getValue();
-						String dictinonary = "";
-						dictinonary += ((ClientGUI.this.chMinusculas.isSelected()) ? ClientGUI.MINUSCULAS : "");
-						dictinonary += ((ClientGUI.this.chMayusculas.isSelected()) ? ClientGUI.MAYUSCULAS : "");
-						dictinonary += ((ClientGUI.this.chNumeros.isSelected()) ? ClientGUI.NUMEROS : "");
-						dictinonary += ((ClientGUI.this.chEspeciales.isSelected()) ? ClientGUI.ESPECIALES : "");
-						ClientGUI.this.out.writeUTF(hash);
-						ClientGUI.this.out.writeInt(characters);
-						ClientGUI.this.out.writeUTF(dictinonary);
-						JOptionPane.showMessageDialog(ClientGUI.this, "Hash: " + hash + "\nChars in the password: " + characters + "\nDictionary: " + dictinonary);
+						boolean minus = ClientGUI.this.chMinusculas.isSelected();
+						boolean mayus = ClientGUI.this.chMayusculas.isSelected();
+						boolean number = ClientGUI.this.chNumeros.isSelected();
+						boolean special = ClientGUI.this.chEspeciales.isSelected();
+						DecriptMessage message = new DecriptMessage(hash, characters, minus, mayus, number, special);
+						ClientGUI.this.out.writeObject(message);
+						ClientGUI.this.out.flush();
+						System.out.println("Enviado");
+						btnDescifrar.setEnabled(false);
+						ClientGUI.this.btnDesconectar.setEnabled(false);
 						String password = ClientGUI.this.in.readUTF();
+						btnDescifrar.setEnabled(true);
+						ClientGUI.this.btnDesconectar.setEnabled(true);
 						JOptionPane.showMessageDialog(ClientGUI.this, password);
 					}
 					catch (IOException event) {
@@ -218,7 +216,7 @@ public class ClientGUI extends JFrame {
 	private void initClient(String host, int port) {
 		try {
 			this.socket = new Socket(host, port);
-			this.out = new DataOutputStream(ClientGUI.this.socket.getOutputStream());
+			this.out = new ObjectOutputStream(ClientGUI.this.socket.getOutputStream());
 			this.in = new DataInputStream(this.socket.getInputStream());
 			this.btnDesconectar.setEnabled(true);
 			this.btnConectar.setEnabled(false);

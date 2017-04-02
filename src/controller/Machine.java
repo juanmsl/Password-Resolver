@@ -1,5 +1,7 @@
 package controller;
 
+import client.DecriptMessage;
+
 public class Machine {
 	public static int MACHINE_CONSECUTIVE = 0;
 	
@@ -29,8 +31,8 @@ public class Machine {
 		return String.format("Machine %s: [Port: %s]", this.id, this.port);
 	}
 	
-	public void resolve(String hashToFind, int characters, String dictionary, char first, char last) {
-		this.machineThread.resolve(hashToFind, characters, dictionary, first, last);
+	public void resolve(DecriptMessage message, char first, char last) {
+		this.machineThread.resolve(message, first, last);
 	}
 	
 	public void remove() {

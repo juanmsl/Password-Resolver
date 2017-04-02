@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import client.DecriptMessage;
+
 public class MachineConection extends Thread {
 	private Machine machine;
 	private ServerSocket serverSocket;
@@ -59,11 +61,11 @@ public class MachineConection extends Thread {
 		}
 	}
 	
-	public void resolve(String hashToFind, int characters, String dictionary, char first, char last) {
+	public void resolve(DecriptMessage message, char first, char last) {
 		try {
-			this.out.writeUTF(hashToFind);
-			this.out.writeInt(characters);
-			this.out.writeUTF(dictionary);
+			this.out.writeUTF(message.getHash());
+			this.out.writeInt(message.getCharacters());
+			this.out.writeUTF(message.getDictionary());
 			this.out.writeChar(first);
 			this.out.writeChar(last);
 		}
