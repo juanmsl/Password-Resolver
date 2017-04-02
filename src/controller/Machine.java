@@ -1,5 +1,7 @@
 package controller;
 
+import java.lang.reflect.InvocationTargetException;
+
 import client.DecriptMessage;
 
 public class Machine {
@@ -31,8 +33,14 @@ public class Machine {
 		return String.format("Machine %s: [Port: %s]", this.id, this.port);
 	}
 	
-	public void resolve(DecriptMessage message, char first, char last) {
-		this.machineThread.resolve(message, first, last);
+	public void resolve(Object message, char first, char last) {
+
+		try {
+			this.machineThread.resolve(message, first, last);
+		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+			System.out.println("Error al acceder al metodo" + e);
+			e.printStackTrace();
+		}
 	}
 	
 	public void remove() {

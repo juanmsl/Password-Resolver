@@ -3,6 +3,8 @@ package controller;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -64,16 +66,28 @@ public class MachineConection extends Thread {
 		}
 	}
 	
-	public void resolve(DecriptMessage message, char first, char last) {
+	public void resolve(Object auxMessage, char first, char last) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		Class message = auxMessage.getClass();
+		System.out.println("Holo2: "+message.getName());
+		Method methods[] = new Method[3];
 		try {
-			this.out.writeUTF(message.getHash());
-			this.out.writeInt(message.getCharacters());
-			this.out.writeUTF(message.getDictionary());
-			this.out.writeChar(first);
-			this.out.writeChar(last);
+			methods[0]= message.getDeclaredMethod("getHash", null);
+			methods[1]= message.getDeclaredMethod("getCharacters", null);
+			methods[2]= message.getDeclaredMethod("getDictionary", null);
+			try {
+				this.out.writeUTF((String) methods[0].invoke(auxMessage, null));
+				this.out.writeInt((int) methods[1].invoke(auxMessage, null));
+				this.out.writeUTF((String) methods[2].invoke(auxMessage, null));
+				this.out.writeChar(first);
+				this.out.writeChar(last);
+			}
+			catch (IOException event) {
+				System.out.println("Error: [" + event.getMessage() + "]");
+			}
+		} catch (NoSuchMethodException | SecurityException e) {
+			System.out.println("Error al acceder al metodo" + e);
+			e.printStackTrace();
 		}
-		catch (IOException event) {
-			System.out.println("[Machine " + this.machine.getId() + "]: Error: [" + event.getMessage() + "]");
-		}
+		
 	}
 }

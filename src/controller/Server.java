@@ -1,5 +1,8 @@
 package controller;
 
+import java.lang.reflect.*;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,32 +46,61 @@ public class Server {
 		control.initializeServer();
 	}
 	
-	public void resolve(DecriptMessage message) {
+	public void resolve(Object auxMessage) {
 		if (this.machines.size() == 0) {
 			this.requestInt(-1);
 			System.out.println("[Server]: No available servers on the moment");
 			this.requestUTF("No available servers on the moment");
 			return;
 		}
+		
 		this.requestInt(0);
 		System.out.println("[Server]: Decoding the hash, please wait");
 		this.requestUTF("Decoding the hash, please wait");
-		int n = message.getDictionary().length() / this.machines.size();
-		int i = 0;
-		for (int port : this.machines.keySet()) {
-			char first = message.getDictionary().charAt(i);
-			i += n;
-			i = ((i >= message.getDictionary().length()) ? message.getDictionary().length() - 1 : i);
-			char last = message.getDictionary().charAt(i);
-			System.out.println(first + " " + last);
-			Machine m = this.machines.get(port);
-			new Thread(new Runnable() {
+		//holo
+
+
+		
+		
+		Class message= auxMessage.getClass();
+		System.out.println("holo: "+ message.getName());
+		Method method;
+		try {
+			method = message.getMethod("getDictionary", null);
+			String dictionary = (String) method.invoke(auxMessage, null);
+			
+			
+			int n = dictionary.length() / this.machines.size();
+			int i = 0;
+			for (int port : this.machines.keySet()) {
+				char first =dictionary.charAt(i);
+				i += n;
+				i = ((i >= dictionary.length()) ? dictionary.length() - 1 : i);
+				char last = dictionary.charAt(i);
+				System.out.println(first + " " + last);
+				Machine m = this.machines.get(port);
+				new Thread(new Runnable() {
+					
+					@Override
+					public void run() {
+						m.resolve(auxMessage, first, last);
+					}
+				}).start();
 				
-				@Override
-				public void run() {
-					m.resolve(message, first, last);
-				}
-			}).start();
+			}
+			
+		} catch (NoSuchMethodException | SecurityException e) {
+			System.out.println("Error al acceder al metodo" + e);
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			System.out.println("Error al acceder al metodo" + e);
+			e.printStackTrace();
+		} catch (IllegalArgumentException e) {
+			System.out.println("Error al acceder al metodo" + e);
+			e.printStackTrace();
+		} catch (InvocationTargetException e) {
+			System.out.println("Error al acceder al metodo" + e);
+			e.printStackTrace();
 		}
 	}
 	
