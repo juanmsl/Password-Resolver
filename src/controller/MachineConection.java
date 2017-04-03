@@ -1,93 +1,59 @@
 package controller;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.net.ServerSocket;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
-
-import client.DecriptMessage;
 
 public class MachineConection extends Thread {
 	private Machine machine;
-	private ServerSocket serverSocket;
-	private DataInputStream in;
-	private DataOutputStream out;
-	private int port;
+	private String hash;
+	private int characters;
+	private String dictionary;
+	private char first;
+	private char last;
 	
-	public MachineConection(int port, Machine machine) {
-		try {
-			this.machine = machine;
-			this.in = null;
-			this.out = null;
-			this.port = port;
-			System.out.println("[Machine " + machine.getId() + "]: Enable conection on port " + port + "...");
-			this.serverSocket = new ServerSocket(port);
-			System.out.println("[Machine " + machine.getId() + "]: Conection enabled on port " + port);
-		}
-		catch (IOException event) {
-			System.out.println("[Machine " + machine.getId() + "]: Error: [" + event.getMessage() + "]");
-			this.serverSocket = null;
-		}
+	public MachineConection(Machine machine, String hash, int characters, String dictionary, char first, char last) {
+		this.machine = machine;
+		this.hash = hash;
+		this.characters = characters;
+		this.dictionary = dictionary;
+		this.first = first;
+		this.last = last;
 	}
 	
 	@Override
 	public void run() {
-		if (this.serverSocket != null) {
-			Socket socket = null;
-			try {
-				System.out.println("[Machine " + this.machine.getId() + "]: Waiting for the machine that will use the port " + this.port + "...");
-				socket = this.serverSocket.accept();
-				System.out.println("[Machine " + this.machine.getId() + "]: Conected on port " + this.port);
-				this.in = new DataInputStream(socket.getInputStream());
-				this.out = new DataOutputStream(socket.getOutputStream());
-				while (true) {
-					String word = this.in.readUTF();
-					System.out.println("[Machine " + this.machine.getId() + "]: " + word);
-					if (word != null) {
-						this.machine.serverToClient(word);
-					}
-				}
-			}
-			catch (IOException event) {
-				if (socket != null) {
-					try {
-						socket.close();
-					}
-					catch (IOException event1) {
-						System.out.println("[Machine " + this.machine.getId() + "]: Error: [" + event1.getMessage() + "]");
-					}
-				}
-				System.out.println("[Machine " + this.machine.getId() + "]: This machine has been disconected");
-				this.machine.remove();
-			}
-		}
-	}
-	
-	public void resolve(Object auxMessage, char first, char last) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		Class message = auxMessage.getClass();
-		System.out.println("Holo2: "+message.getName());
-		Method methods[] = new Method[3];
 		try {
-			methods[0]= message.getDeclaredMethod("getHash", null);
-			methods[1]= message.getDeclaredMethod("getCharacters", null);
-			methods[2]= message.getDeclaredMethod("getDictionary", null);
-			try {
-				this.out.writeUTF((String) methods[0].invoke(auxMessage, null));
-				this.out.writeInt((int) methods[1].invoke(auxMessage, null));
-				this.out.writeUTF((String) methods[2].invoke(auxMessage, null));
-				this.out.writeChar(first);
-				this.out.writeChar(last);
+			System.out.println("[Machine " + this.machine.getID() + "]: Conecting to external server [" + this.machine.getHost().getHostAddress() + " : " + this.machine.getPort() + "]...");
+			Socket socket = new Socket(this.machine.getHost(), this.machine.getPort());
+			System.out.println("[Machine " + this.machine.getID() + "]: Conected to external server [" + this.machine.getHost().getHostAddress() + " : " + this.machine.getPort() + "]");
+			ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream());
+			ObjectInputStream input = new ObjectInputStream(socket.getInputStream());
+			output.writeObject(this.hash);
+			output.writeObject(this.characters);
+			output.writeObject(this.dictionary);
+			output.writeObject(this.first);
+			output.writeObject(this.last);
+			System.out.println("[Machine " + this.machine.getID() + "]: Waiting for response of the external server...");
+			int confirmation = (int) input.readObject();
+			String password = (String) input.readObject();
+			System.out.println("[Machine " + this.machine.getID() + "]: Response for the given hash [" + password + "]");
+			if (confirmation == 0) {
+				this.machine.serverToClient(password);
+				this.machine.stopOtherMachines();
 			}
-			catch (IOException event) {
-				System.out.println("Error: [" + event.getMessage() + "]");
-			}
-		} catch (NoSuchMethodException | SecurityException e) {
-			System.out.println("Error al acceder al metodo" + e);
-			e.printStackTrace();
+			
+			socket.close();
+			System.out.println("[Machine " + this.machine.getID() + "]: Finished");
+			this.machine.reset();
 		}
-		
+		catch (IOException event) {
+			System.out.println("[Machine " + this.machine.getID() + "]: This machine has been disconected");
+			this.machine.remove();
+		}
+		catch (ClassNotFoundException event) {
+			System.out.println("[Machine " + this.machine.getID() + "]: Error: [" + event.getMessage() + "]");
+		}
 	}
 }

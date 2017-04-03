@@ -12,26 +12,16 @@ public class DecriptMessage implements Serializable {
 	private String hash;
 	private int characters;
 	private String dictionary;
-	private String password;
 	
 	public DecriptMessage(String hash, int characters, boolean minus, boolean mayus, boolean number, boolean special) {
 		this.hash = hash;
 		this.characters = characters;
 		this.dictionary = "";
-		this.password = "";
 		this.dictionary += ((minus) ? DecriptMessage.MINUSCULAS : "");
 		this.dictionary += ((mayus) ? DecriptMessage.MAYUSCULAS : "");
 		this.dictionary += ((number) ? DecriptMessage.NUMEROS : "");
 		this.dictionary += ((special) ? DecriptMessage.ESPECIALES : "");
 		
-	}
-	
-	public String getPassword() {
-		return this.password;
-	}
-	
-	public void setPassword(String password) {
-		this.password = password;
 	}
 	
 	public String getHash() {
@@ -48,6 +38,6 @@ public class DecriptMessage implements Serializable {
 	
 	@Override
 	public String toString() {
-		return String.format("Hash: %s\nPassword contains %s characters\nDictionary: %s\nPassword: %s", this.hash, this.characters, this.dictionary, this.password);
+		return String.format("Hash: %s\nPassword contains %s characters\nDictionary: %s", this.hash, this.characters, this.dictionary);
 	}
 }

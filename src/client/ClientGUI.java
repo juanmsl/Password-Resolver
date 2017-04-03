@@ -5,7 +5,6 @@ import java.awt.Component;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -56,7 +55,6 @@ public class ClientGUI extends JFrame {
 	private JCheckBox chNumeros;
 	private JCheckBox chEspeciales;
 	private JButton btnDesconectar;
-	private DataInputStream dataInput;
 	private JLabel label;
 	
 	public static void main(String[] args) {
@@ -146,6 +144,7 @@ public class ClientGUI extends JFrame {
 		this.panel.add(this.lblHashADescifrar, "cell 0 0,alignx right");
 		
 		this.hashInput = new JTextField();
+		this.hashInput.setText("b221d9dbb083a7f33428d7c2a3c3198ae925614d70210e28716ccaa7cd4ddb79");
 		this.panel.add(this.hashInput, "cell 1 0,growx");
 		this.hashInput.setColumns(10);
 		
@@ -154,7 +153,7 @@ public class ClientGUI extends JFrame {
 		
 		this.charsInput = new JSpinner();
 		this.panel.add(this.charsInput, "cell 1 1,growx");
-		this.charsInput.setModel(new SpinnerNumberModel(2, 2, 10, 1));
+		this.charsInput.setModel(new SpinnerNumberModel(4, 2, 10, 1));
 		
 		this.horizontalStrut_1 = Box.createHorizontalStrut(90);
 		this.panel.add(this.horizontalStrut_1, "cell 0 2");
@@ -196,7 +195,6 @@ public class ClientGUI extends JFrame {
 			this.label.setText("Getting the stream of input and output of the comunication");
 			this.objectOutput = new ObjectOutputStream(this.socket.getOutputStream());
 			this.objectInput = new ObjectInputStream(this.socket.getInputStream());
-			this.dataInput = new DataInputStream(this.socket.getInputStream());
 			this.btnDesconectar.setEnabled(true);
 			this.btnConectar.setEnabled(false);
 			this.label.setText("Communication established");
@@ -223,29 +221,34 @@ public class ClientGUI extends JFrame {
 		}
 	}
 	
+	private DecriptMessage getDecriptMessage() {
+		String hash = this.hashInput.getText();
+		int characters = (int) this.charsInput.getValue();
+		boolean minus = this.chMinusculas.isSelected();
+		boolean mayus = this.chMayusculas.isSelected();
+		boolean number = this.chNumeros.isSelected();
+		boolean special = this.chEspeciales.isSelected();
+		DecriptMessage message = new DecriptMessage(hash, characters, minus, mayus, number, special);
+		return message;
+	}
+	
 	private void descifrar(JButton btnDescifrar) {
 		if (this.socket != null) {
 			try {
-				String hash = this.hashInput.getText();
-				int characters = (int) this.charsInput.getValue();
-				boolean minus = this.chMinusculas.isSelected();
-				boolean mayus = this.chMayusculas.isSelected();
-				boolean number = this.chNumeros.isSelected();
-				boolean special = this.chEspeciales.isSelected();
-				DecriptMessage message = new DecriptMessage(hash, characters, minus, mayus, number, special);
-				this.label.setText(message.toString());
+				DecriptMessage message = this.getDecriptMessage();
+				this.label.setText("Confirm the data");
 				int option = JOptionPane.showConfirmDialog(this, message);
 				if (option == 0) {
 					btnDescifrar.setEnabled(false);
 					this.btnDesconectar.setEnabled(false);
 					this.objectOutput.writeObject(message);
 					this.label.setText("Enviado");
-					int confirmation = this.dataInput.readInt();
-					String confirmationMessage = this.dataInput.readUTF();
+					int confirmation = (int) this.objectInput.readObject();
+					String confirmationMessage = (String) this.objectInput.readObject();
 					this.label.setText(confirmationMessage);
 					JOptionPane.showMessageDialog(this, confirmationMessage);
 					if (confirmation == 0) {
-						String password = this.dataInput.readUTF();
+						String password = (String) this.objectInput.readObject();
 						this.label.setText(password);
 						JOptionPane.showMessageDialog(this, password);
 					}
@@ -258,7 +261,11 @@ public class ClientGUI extends JFrame {
 			catch (IOException event) {
 				this.label.setText("Error: [" + event.getMessage() + "]");
 			}
+			catch (ClassNotFoundException event) {
+				this.label.setText("Error: [" + event.getMessage() + "]");
+			}
 		} else {
+			this.label.setText("You must conect first to the server");
 			JOptionPane.showMessageDialog(this, "You must conect first to the server");
 		}
 	}

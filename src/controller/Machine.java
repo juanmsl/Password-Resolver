@@ -1,49 +1,65 @@
 package controller;
 
-import java.lang.reflect.InvocationTargetException;
-
-import client.DecriptMessage;
+import java.net.InetAddress;
 
 public class Machine {
 	public static int MACHINE_CONSECUTIVE = 0;
 	
-	private int id;
+	private int ID;
 	private int port;
-	private MachineConection machineThread;
-	private Server server;
+	private MainServer mainServer;
+	private InetAddress host;
+	private MachineConection machineConection;
 	
-	public Machine(int port, Server server) {
-		this.id = ++Machine.MACHINE_CONSECUTIVE;
+	public Machine(int port, InetAddress host, MainServer server) {
+		this.ID = ++Machine.MACHINE_CONSECUTIVE;
 		this.port = port;
-		this.server = server;
-		this.machineThread = new MachineConection(this.port, this);
-		this.machineThread.start();
+		this.mainServer = server;
+		this.host = host;
+		this.machineConection = null;
 	}
 	
-	public int getId() {
-		return this.id;
+	public int getID() {
+		return this.ID;
 	}
 	
-	public void serverToClient(String word) {
-		this.server.requestUTF(word);
+	public void serverToClient(Object object) {
+		this.mainServer.request(object);
+	}
+	
+	public void resolve(String hash, int characters, String dictionary, char first, char last) {
+		this.machineConection = new MachineConection(this, hash, characters, dictionary, first, last);
+		this.machineConection.start();
+	}
+	
+	public void remove() {
+		this.mainServer.removeMachine(this.port);
+	}
+	
+	public void stopOtherMachines() {
+		this.mainServer.stopOtherMachines();
+	}
+	
+	public void reset() {
+		this.machineConection = null;
+	}
+	
+	public void stop() {
+		if (this.machineConection != null) {
+			this.machineConection.interrupt();
+		}
+	}
+	
+	public int getPort() {
+		return this.port;
+	}
+	
+	public InetAddress getHost() {
+		return this.host;
 	}
 	
 	@Override
 	public String toString() {
-		return String.format("Machine %s: [Port: %s]", this.id, this.port);
-	}
-	
-	public void resolve(Object message, char first, char last) {
-
-		try {
-			this.machineThread.resolve(message, first, last);
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-			System.out.println("Error al acceder al metodo" + e);
-			e.printStackTrace();
-		}
-	}
-	
-	public void remove() {
-		this.server.removeMachine(this.port);
+		return String.format("Machine %s: [Port: %s]", this.ID, this.port);
 	}
 }
