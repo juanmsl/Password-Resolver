@@ -31,7 +31,7 @@ public class DiscoverThread extends Thread {
 				while (true) {
 					Socket socket = this.serverSocket.accept();
 					System.out.println("[Discover thread]: Machine connected");
-					InetAddress host = socket.getLocalAddress();
+					InetAddress host = socket.getInetAddress();
 					ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream());
 					int port = -1;
 					for (int i = 1; i <= MainServer.MACHINES; i++) {

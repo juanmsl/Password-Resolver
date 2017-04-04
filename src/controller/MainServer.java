@@ -88,7 +88,8 @@ public class MainServer {
 	}
 	
 	public void removeMachine(int port) {
-		this.machines.remove(port);
+		Machine m = this.machines.remove(port);
+		System.out.println("[Server]: The machine " + m.getID() + " was removed");
 	}
 	
 	public void stopOtherMachines() {
